@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Database Local</title>
+    <title>Database WEB SQL</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/bootstrap.min.css">
@@ -92,15 +92,12 @@
                         <h4 class="modal-title" id="judul"></h4>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
-
                     <div class="modal-body" id="tampilModal">
-
+                        Ini Modal Body
                     </div>
-
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger" id="tutupModal" data-dismiss="modal">Batal</button>
-                        <butto class="btn btn-primary" onclick="Query(document.getElementById('act').value);">
-                            Simpan</button>
+                        <butto class="btn btn-primary" id="proses" onclick="Query(document.getElementById('act').value);">Simpan</button>
                     </div>
                 </div>
             </div>
@@ -138,6 +135,14 @@
                     Query('tampilPelanggan');
                 break;
 
+                case 'hapusPelanggan':
+                    db.transaction(function (tx) {
+                        tx.executeSql('DELETE FROM dbmcard WHERE ID = ' + document.getElementById('idPelanggan').value);
+                    });
+                    document.getElementById('tutupModal').click();
+                    Query('tampilPelanggan');
+                break;
+
                 case 'tampilPelanggan':
                     document.querySelector('#dataPelanggan').innerHTML = "";
                     db.transaction(function (tx) {
@@ -145,7 +150,7 @@
                             var len = results.rows.length,
                                 i;
                             for (i = 0; i < len; i++) {
-                                msg = "<tr> <td>" + results.rows.item(i).Nama + "</td> <td>" + results.rows.item(i).Email + "</td> <td>" + results.rows.item(i).Telp + "</td> <td>" + results.rows.item(i).Alamat + "</td> <td><button class='btn btn-danger'>Hapus</button> <button class='btn btn-success' data-target='#modal' data-toggle='modal' onclick='modal(&quot;editPelanggan&quot;, " + results.rows.item(i).ID + ");'>Edit</button></td> </tr>";
+                                msg = "<tr> <td>" + results.rows.item(i).Nama + "</td> <td>" + results.rows.item(i).Email + "</td> <td>" + results.rows.item(i).Telp + "</td> <td>" + results.rows.item(i).Alamat + "</td> <td><button class='btn btn-danger' data-target='#modal' data-toggle='modal' onclick='modal(&quot;hapusPelanggan&quot;, " + results.rows.item(i).ID + ");'>Hapus</button> <button class='btn btn-success' data-target='#modal' data-toggle='modal' onclick='modal(&quot;editPelanggan&quot;, " + results.rows.item(i).ID + ");'>Edit</button></td> </tr>";
                                 document.querySelector('#dataPelanggan').innerHTML += msg;
                             }
                         }, null);
@@ -178,11 +183,19 @@
                             var len = results.rows.length,
                                 i;
                             for (i = 0; i < len; i++) {
-                                msg = "<tr> <td>" + results.rows.item(i).Nama + "</td> <td>" + results.rows.item(i).Jumlah + "</td> <td>" + results.rows.item(i).Harga + "</td> <td>" + results.rows.item(i).Satuan + "</td> <td><button class='btn btn-danger'>Hapus</button> <button class='btn btn-success' data-target='#modal' data-toggle='modal' onclick='modal(&quot;editBarang&quot;, " + results.rows.item(i).ID + ");'>Edit</button></td> </tr>";
+                                msg = "<tr> <td>" + results.rows.item(i).Nama + "</td> <td>" + results.rows.item(i).Jumlah + "</td> <td>" + results.rows.item(i).Harga + "</td> <td>" + results.rows.item(i).Satuan + "</td> <td><button class='btn btn-danger' data-target='#modal' data-toggle='modal' onclick='modal(&quot;hapusBarang&quot;, " + results.rows.item(i).ID + ");'>Hapus</button> <button class='btn btn-success' data-target='#modal' data-toggle='modal' onclick='modal(&quot;editBarang&quot;, " + results.rows.item(i).ID + ");'>Edit</button></td> </tr>";
                                 document.querySelector('#dataBarang').innerHTML += msg;
                             }
                         }, null);
                     });
+                break;
+
+                case 'hapusBarang':
+                    db.transaction(function (tx) {
+                        tx.executeSql('DELETE FROM dbmitem WHERE ID = ' + document.getElementById('idBarang').value);
+                    });
+                    document.getElementById('tutupModal').click();
+                    Query('tampilBarang');
                 break;
             }
         }
@@ -198,6 +211,7 @@
                     isi += "<div class='form-group'><label>Alamat Pelanggan</label><textarea id='alamatPelanggan' class='form-control'></textarea></div>";
                     document.getElementById('tampilModal').innerHTML = isi;
                     document.getElementById('judul').innerHTML = "Tambah Pelanggan";
+                    document.getElementById('proses').innerHTML = "Simpan";
                 break;
 
                 case 'editPelanggan':
@@ -217,6 +231,16 @@
                         }, null);
                     });
                     document.getElementById('judul').innerHTML = "Edit Pelanggan";
+                    document.getElementById('proses').innerHTML = "Simpan";
+                break;
+
+                case'hapusPelanggan':
+                    isi += "<input type='hidden' id='act' value='hapusPelanggan'>";
+                    isi += "<input type='hidden' id='idPelanggan' value='"+id+"'>";
+                    isi += "Apakah Anda Yakin Akan Menghapus Data Ini !!";
+                    document.getElementById('tampilModal').innerHTML = isi;
+                    document.getElementById('judul').innerHTML = "Hapus Pelanggan";
+                    document.getElementById('proses').innerHTML = "Hapus";
                 break;
 
                 case'addBarang':
@@ -227,6 +251,7 @@
                     isi += "<div class='form-group'><label>Harga Barang</label><input type='number' id='hargaBarang' class='form-control'></div>";
                     document.getElementById('tampilModal').innerHTML = isi;
                     document.getElementById('judul').innerHTML = "Tambah Barang";
+                    document.getElementById('proses').innerHTML = "Simpan";
                 break;
 
                 case 'editBarang':
@@ -246,6 +271,16 @@
                         }, null);
                     });
                     document.getElementById('judul').innerHTML = "Edit Barang";
+                    document.getElementById('proses').innerHTML = "Simpan";
+                break;
+
+                case'hapusBarang':
+                    isi += "<input type='hidden' id='act' value='hapusBarang'>";
+                    isi += "<input type='hidden' id='idBarang' value='"+id+"'>";
+                    isi += "Apakah Anda Yakin Akan Menghapus Data Ini !!";
+                    document.getElementById('tampilModal').innerHTML = isi;
+                    document.getElementById('judul').innerHTML = "Hapus Barang";
+                    document.getElementById('proses').innerHTML = "Hapus";
                 break;
             }
         }
