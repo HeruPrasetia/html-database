@@ -21,7 +21,7 @@
                 <a class="nav-link" data-toggle="tab" href="#menu1" onclick="Query('tampilBarang');">Barang</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#menu2">Transaksi</a>
+                <a class="nav-link" data-toggle="tab" href="#menu2" onclick="transaksi();">Transaksi</a>
             </li>
         </ul>
 
@@ -67,227 +67,337 @@
                 </table>
             </div>
             <div id="menu2" class="container tab-pane fade"><br>
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
-                    Tambah Transaksi
-                </button>
-                <table class="table tables-triped">
-                    <thead>
+                <form action="#">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tanggal Transaksi</label>
+                                <input type="date" id="tanggal" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Pelanggan</label>
+                                <div id="divPelanggan"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <table id="tableTransaksi" class="table">
                         <tr>
-                            <th>Nama</th>
-                            <th>Jumlah</th>
-                            <th>Harga</th>
-                            <th>Satuan</th>
+                            <th width="5%">No</th>
+                            <th width="25%">Nama</th>
+                            <th width="20%">Qty</th>
+                            <th width="20%">Harga</th>
+                            <th width="30%">Opsi</th>
                         </tr>
-                    </thead>
-                    <tbody id="dataTransaksi">
+                        <tr>
+                            <td>1</td>
+                            <td id="barang1">
 
-                    </tbody>
-                </table>
+                            </td>
+                            <td><input type="Number" class="form-control form-control-sm qty" id="qty" name="qty1" /></td>
+                            <td><input type="number" class="form-control form-control-sm harga" id="harga" name="harga1" />
+                            </td>
+                            <td><button type="button" class="btn btn-danger btn-sm" id="delPOIbutton"
+                                    onclick="deleteRow(this)">X</button> <button type="button"
+                                    class="btn btn-primary btn-sm" id="addmorePOIbutton" onclick="insRow()">+</button>
+                            </td>
+                        </tr>
+                    </table>
+                    <button type="button" class="btn btn-primary btn-sm"
+                        onClick="simpanTransaksi();">Simpan</button>
+                </form>
             </div>
-        </div>
 
-        <div class="modal" id="modal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title" id="judul"></h4>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body" id="tampilModal">
-                        Ini Modal Body
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" id="tutupModal" data-dismiss="modal">Batal</button>
-                        <butto class="btn btn-primary" id="proses" onclick="Query(document.getElementById('act').value);">Simpan</button>
+            <div class="modal" id="modal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="judul"></h4>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body" id="tampilModal">
+                            Ini Modal Body
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" id="tutupModal"
+                                data-dismiss="modal">Batal</button>
+                            <butto class="btn btn-primary" id="proses"
+                                onclick="Query(document.getElementById('act').value);">Simpan</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <script type="text/javascript">
-        var db = openDatabase('dbku', '1.0', 'Ini Adalah Database web ku', 2 * 1024 * 1024);
-        var msg;
+        <script type="text/javascript">
+            let db = openDatabase('dbku', '1.0', 'Ini Adalah Database web ku', 2 * 1024 * 1024);
+            let msg;
 
-        db.transaction(function (tx) {
-            tx.executeSql('CREATE TABLE IF NOT EXISTS dbmcard (ID INTEGER PRIMARY KEY, Nama varchar, Email varchar, Telp INTEGER, Alamat varchar, Type varchar)');
-            tx.executeSql('CREATE TABLE IF NOT EXISTS dbmitem (ID INTEGER PRIMARY KEY, Nama varchar, Harga INTEGER, Satuan INTEGER, Jumlah INTEGER)');
-            tx.executeSql('CREATE TABLE IF NOT EXISTS dtitemtrans (ID INTEGER PRIMARY KEY, CardID INTEGER, Tanggal DATE)');
-            tx.executeSql('CREATE TABLE IF NOT EXISTS dtitemtransdetail (ID INTEGER PRIMARY KEY, DocID INTEGER, ItemID INTEGER, Jumlah INTEGER, Harga INTEGER)');
-        })
+            db.transaction(function (tx) {
+                tx.executeSql('CREATE TABLE IF NOT EXISTS dbmcard (ID INTEGER PRIMARY KEY, Nama varchar, Email varchar, Telp INTEGER, Alamat varchar, Type varchar)');
+                tx.executeSql('CREATE TABLE IF NOT EXISTS dbmitem (ID INTEGER PRIMARY KEY, Nama varchar, Harga INTEGER, Satuan INTEGER, Jumlah INTEGER)');
+                tx.executeSql('CREATE TABLE IF NOT EXISTS dtitemtrans (ID INTEGER PRIMARY KEY, CardID INTEGER, Tanggal DATE)');
+                tx.executeSql('CREATE TABLE IF NOT EXISTS dtitemtransdetail (ID INTEGER PRIMARY KEY, DocID INTEGER, ItemID INTEGER, Jumlah INTEGER, Harga INTEGER)');
+            })
 
-        function Query(act) {
-            switch (act) {
-                case 'addPelanggan':
-                    db.transaction(function (tx) {
-                        tx.executeSql('INSERT INTO dbmcard (Nama, Email, Telp, Alamat, Type) VALUES ("' + document.getElementById('namaPelanggan').value + '", "' + document.getElementById('emailPelanggan').value + '", "' + document.getElementById('telpPelanggan').value + '", "' + document.getElementById('alamatPelanggan').value + '", "User")', [], function (tx, sql_res) {
-                            var lastInsertId = sql_res.insertId;
-                            alert('Berhasil Menambah data user dengan id : ' + lastInsertId);
+            function Query(act) {
+                switch (act) {
+                    case 'addPelanggan':
+                        db.transaction(function (tx) {
+                            tx.executeSql('INSERT INTO dbmcard (Nama, Email, Telp, Alamat, Type) VALUES ("' + document.getElementById('namaPelanggan').value + '", "' + document.getElementById('emailPelanggan').value + '", "' + document.getElementById('telpPelanggan').value + '", "' + document.getElementById('alamatPelanggan').value + '", "User")', [], function (tx, sql_res) {
+                                let lastInsertId = sql_res.insertId;
+                                alert('Berhasil Menambah data user dengan id : ' + lastInsertId);
+                            });
                         });
-                    });
-                    document.getElementById('tutupModal').click();
-                    Query('tampilPelanggan');
-                break;
+                        document.getElementById('tutupModal').click();
+                        Query('tampilPelanggan');
+                        break;
 
-                case 'editPelanggan':
-                    db.transaction(function (tx) {
-                        tx.executeSql('UPDATE dbmcard SET Nama = "' + document.getElementById('namaPelanggan').value + '", Email = "' + document.getElementById('emailPelanggan').value + '", Telp = "' + document.getElementById('telpPelanggan').value + '", Alamat = "' + document.getElementById('alamatPelanggan').value + '" WHERE ID = ' + document.getElementById('idPelanggan').value);
-                    });
-                    document.getElementById('tutupModal').click();
-                    Query('tampilPelanggan');
-                break;
-
-                case 'hapusPelanggan':
-                    db.transaction(function (tx) {
-                        tx.executeSql('DELETE FROM dbmcard WHERE ID = ' + document.getElementById('idPelanggan').value);
-                    });
-                    document.getElementById('tutupModal').click();
-                    Query('tampilPelanggan');
-                break;
-
-                case 'tampilPelanggan':
-                    document.querySelector('#dataPelanggan').innerHTML = "";
-                    db.transaction(function (tx) {
-                        tx.executeSql('SELECT * FROM dbmcard', [], function (tx, results) {
-                            var len = results.rows.length,
-                                i;
-                            for (i = 0; i < len; i++) {
-                                msg = "<tr> <td>" + results.rows.item(i).Nama + "</td> <td>" + results.rows.item(i).Email + "</td> <td>" + results.rows.item(i).Telp + "</td> <td>" + results.rows.item(i).Alamat + "</td> <td><button class='btn btn-danger' data-target='#modal' data-toggle='modal' onclick='modal(&quot;hapusPelanggan&quot;, " + results.rows.item(i).ID + ");'>Hapus</button> <button class='btn btn-success' data-target='#modal' data-toggle='modal' onclick='modal(&quot;editPelanggan&quot;, " + results.rows.item(i).ID + ");'>Edit</button></td> </tr>";
-                                document.querySelector('#dataPelanggan').innerHTML += msg;
-                            }
-                        }, null);
-                    });
-                break;
-
-                case 'addBarang':
-                    db.transaction(function (tx) {
-                        tx.executeSql('INSERT INTO dbmitem (Nama, Jumlah, Harga, Satuan) VALUES ("' + document.getElementById('namaBarang').value + '", "' + document.getElementById('jumlahBarang').value + '", "' + document.getElementById('hargaBarang').value + '", "' + document.getElementById('satuanBarang').value + '")', [], function (tx, sql_res) {
-                            var lastInsertId = sql_res.insertId;
-                            alert('Berhasil Menambah data Barang dengan id : ' + lastInsertId);
+                    case 'editPelanggan':
+                        db.transaction(function (tx) {
+                            tx.executeSql('UPDATE dbmcard SET Nama = "' + document.getElementById('namaPelanggan').value + '", Email = "' + document.getElementById('emailPelanggan').value + '", Telp = "' + document.getElementById('telpPelanggan').value + '", Alamat = "' + document.getElementById('alamatPelanggan').value + '" WHERE ID = ' + document.getElementById('idPelanggan').value);
                         });
-                    });
-                    document.getElementById('tutupModal').click();
-                    Query("tampilBarang");
-                break;
+                        document.getElementById('tutupModal').click();
+                        Query('tampilPelanggan');
+                        break;
 
-                case 'editBarang':
-                    db.transaction(function (tx) {
-                        tx.executeSql('UPDATE dbmitem SET Nama = "' + document.getElementById('namaBarang').value + '", Jumlah = "' + document.getElementById('jumlahBarang').value+ '", Harga = "' + document.getElementById('hargaBarang').value + '", Satuan = "' + document.getElementById('satuanBarang').value + '" WHERE ID = ' + document.getElementById('idBarang').value)
-                    });
-                    document.getElementById('tutupModal').click();
-                    Query("tampilBarang");
-                break;
+                    case 'hapusPelanggan':
+                        db.transaction(function (tx) {
+                            tx.executeSql('DELETE FROM dbmcard WHERE ID = ' + document.getElementById('idPelanggan').value);
+                        });
+                        document.getElementById('tutupModal').click();
+                        Query('tampilPelanggan');
+                        break;
 
-                case 'tampilBarang':
-                    document.querySelector('#dataBarang').innerHTML = "";
-                    db.transaction(function (tx) {
-                        tx.executeSql('SELECT * FROM dbmitem', [], function (tx, results) {
-                            var len = results.rows.length,
-                                i;
-                            for (i = 0; i < len; i++) {
-                                msg = "<tr> <td>" + results.rows.item(i).Nama + "</td> <td>" + results.rows.item(i).Jumlah + "</td> <td>" + results.rows.item(i).Harga + "</td> <td>" + results.rows.item(i).Satuan + "</td> <td><button class='btn btn-danger' data-target='#modal' data-toggle='modal' onclick='modal(&quot;hapusBarang&quot;, " + results.rows.item(i).ID + ");'>Hapus</button> <button class='btn btn-success' data-target='#modal' data-toggle='modal' onclick='modal(&quot;editBarang&quot;, " + results.rows.item(i).ID + ");'>Edit</button></td> </tr>";
-                                document.querySelector('#dataBarang').innerHTML += msg;
-                            }
-                        }, null);
-                    });
-                break;
+                    case 'tampilPelanggan':
+                        document.querySelector('#dataPelanggan').innerHTML = "";
+                        db.transaction(function (tx) {
+                            tx.executeSql('SELECT * FROM dbmcard', [], function (tx, results) {
+                                let len = results.rows.length,
+                                    i;
+                                for (i = 0; i < len; i++) {
+                                    msg = "<tr> <td>" + results.rows.item(i).Nama + "</td> <td>" + results.rows.item(i).Email + "</td> <td>" + results.rows.item(i).Telp + "</td> <td>" + results.rows.item(i).Alamat + "</td> <td><button class='btn btn-danger' data-target='#modal' data-toggle='modal' onclick='modal(&quot;hapusPelanggan&quot;, " + results.rows.item(i).ID + ");'>Hapus</button> <button class='btn btn-success' data-target='#modal' data-toggle='modal' onclick='modal(&quot;editPelanggan&quot;, " + results.rows.item(i).ID + ");'>Edit</button></td> </tr>";
+                                    document.querySelector('#dataPelanggan').innerHTML += msg;
+                                }
+                            }, null);
+                        });
+                    break;
 
-                case 'hapusBarang':
-                    db.transaction(function (tx) {
-                        tx.executeSql('DELETE FROM dbmitem WHERE ID = ' + document.getElementById('idBarang').value);
-                    });
-                    document.getElementById('tutupModal').click();
-                    Query('tampilBarang');
-                break;
+                    case 'addBarang':
+                        db.transaction(function (tx) {
+                            tx.executeSql('INSERT INTO dbmitem (Nama, Jumlah, Harga, Satuan) VALUES ("' + document.getElementById('namaBarang').value + '", "' + document.getElementById('jumlahBarang').value + '", "' + document.getElementById('hargaBarang').value + '", "' + document.getElementById('satuanBarang').value + '")', [], function (tx, sql_res) {
+                                let lastInsertId = sql_res.insertId;
+                                alert('Berhasil Menambah data Barang dengan id : ' + lastInsertId);
+                            });
+                        });
+                        document.getElementById('tutupModal').click();
+                        Query("tampilBarang");
+                    break;
+
+                    case 'editBarang':
+                        db.transaction(function (tx) {
+                            tx.executeSql('UPDATE dbmitem SET Nama = "' + document.getElementById('namaBarang').value + '", Jumlah = "' + document.getElementById('jumlahBarang').value + '", Harga = "' + document.getElementById('hargaBarang').value + '", Satuan = "' + document.getElementById('satuanBarang').value + '" WHERE ID = ' + document.getElementById('idBarang').value)
+                        });
+                        document.getElementById('tutupModal').click();
+                        Query("tampilBarang");
+                        break;
+
+                    case 'tampilBarang':
+                        document.querySelector('#dataBarang').innerHTML = "";
+                        db.transaction(function (tx) {
+                            tx.executeSql('SELECT * FROM dbmitem', [], function (tx, results) {
+                                let len = results.rows.length,
+                                    i;
+                                for (i = 0; i < len; i++) {
+                                    msg = "<tr> <td>" + results.rows.item(i).Nama + "</td> <td>" + results.rows.item(i).Jumlah + "</td> <td>" + results.rows.item(i).Harga + "</td> <td>" + results.rows.item(i).Satuan + "</td> <td><button class='btn btn-danger' data-target='#modal' data-toggle='modal' onclick='modal(&quot;hapusBarang&quot;, " + results.rows.item(i).ID + ");'>Hapus</button> <button class='btn btn-success' data-target='#modal' data-toggle='modal' onclick='modal(&quot;editBarang&quot;, " + results.rows.item(i).ID + ");'>Edit</button></td> </tr>";
+                                    document.querySelector('#dataBarang').innerHTML += msg;
+                                }
+                            }, null);
+                        });
+                    break;
+
+                    case 'hapusBarang':
+                        db.transaction(function (tx) {
+                            tx.executeSql('DELETE FROM dbmitem WHERE ID = ' + document.getElementById('idBarang').value);
+                        });
+                        document.getElementById('tutupModal').click();
+                        Query('tampilBarang');
+                        break;
+                }
             }
-        }
 
-        function modal(act, id='null'){
-            let isi = "";
-            switch(act){
-                case'addPelanggan':
-                    isi += "<input type='hidden' id='act' value='addPelanggan'>";
-                    isi += "<div class='form-group'><label>Nama Pelanggan</label><input type='text' id='namaPelanggan' class='form-control'></div>";
-                    isi += "<div class='form-group'><label>Email Pelanggan</label><input type='text' id='emailPelanggan' class='form-control'></div>";
-                    isi += "<div class='form-group'><label>Telp Pelanggan</label><input type='number' id='telpPelanggan' class='form-control'></div>";
-                    isi += "<div class='form-group'><label>Alamat Pelanggan</label><textarea id='alamatPelanggan' class='form-control'></textarea></div>";
-                    document.getElementById('tampilModal').innerHTML = isi;
-                    document.getElementById('judul').innerHTML = "Tambah Pelanggan";
-                    document.getElementById('proses').innerHTML = "Simpan";
-                break;
+            function modal(act, id = 'null') {
+                let isi = "";
+                switch (act) {
+                    case 'addPelanggan':
+                        isi += "<input type='hidden' id='act' value='addPelanggan'>";
+                        isi += "<div class='form-group'><label>Nama Pelanggan</label><input type='text' id='namaPelanggan' class='form-control'></div>";
+                        isi += "<div class='form-group'><label>Email Pelanggan</label><input type='text' id='emailPelanggan' class='form-control'></div>";
+                        isi += "<div class='form-group'><label>Telp Pelanggan</label><input type='number' id='telpPelanggan' class='form-control'></div>";
+                        isi += "<div class='form-group'><label>Alamat Pelanggan</label><textarea id='alamatPelanggan' class='form-control'></textarea></div>";
+                        document.getElementById('tampilModal').innerHTML = isi;
+                        document.getElementById('judul').innerHTML = "Tambah Pelanggan";
+                        document.getElementById('proses').innerHTML = "Simpan";
+                        break;
 
-                case 'editPelanggan':
-                    db.transaction(function (tx) {
-                        tx.executeSql('SELECT * FROM dbmcard WHERE ID = ' + id, [], function (tx, results) {
-                            var len = results.rows.length,
-                                i;
-                            for (i = 0; i < len; i++) {
-                                isi += "<input type='hidden' id='act' value='editPelanggan'>";
-                                isi += "<input type='hidden' id='idPelanggan' value='"+id+"'>";
-                                isi += "<div class='form-group'><label>Nama Pelanggan</label><input type='text' id='namaPelanggan' value='"+results.rows.item(i).Nama+"' class='form-control'></div>";
-                                isi += "<div class='form-group'><label>Email Pelanggan</label><input type='text' id='emailPelanggan' value='"+results.rows.item(i).Email+"' class='form-control'></div>";
-                                isi += "<div class='form-group'><label>Telp Pelanggan</label><input type='number' id='telpPelanggan' value='"+results.rows.item(i).Telp+"' class='form-control'></div>";
-                                isi += "<div class='form-group'><label>Alamat Pelanggan</label><textarea id='alamatPelanggan' class='form-control'>"+results.rows.item(i).Alamat+"</textarea></div>";
-                                document.getElementById('tampilModal').innerHTML = isi; 
-                            }
-                        }, null);
-                    });
-                    document.getElementById('judul').innerHTML = "Edit Pelanggan";
-                    document.getElementById('proses').innerHTML = "Simpan";
-                break;
+                    case 'editPelanggan':
+                        db.transaction(function (tx) {
+                            tx.executeSql('SELECT * FROM dbmcard WHERE ID = ' + id, [], function (tx, results) {
+                                let len = results.rows.length,
+                                    i;
+                                for (i = 0; i < len; i++) {
+                                    isi += "<input type='hidden' id='act' value='editPelanggan'>";
+                                    isi += "<input type='hidden' id='idPelanggan' value='" + id + "'>";
+                                    isi += "<div class='form-group'><label>Nama Pelanggan</label><input type='text' id='namaPelanggan' value='" + results.rows.item(i).Nama + "' class='form-control'></div>";
+                                    isi += "<div class='form-group'><label>Email Pelanggan</label><input type='text' id='emailPelanggan' value='" + results.rows.item(i).Email + "' class='form-control'></div>";
+                                    isi += "<div class='form-group'><label>Telp Pelanggan</label><input type='number' id='telpPelanggan' value='" + results.rows.item(i).Telp + "' class='form-control'></div>";
+                                    isi += "<div class='form-group'><label>Alamat Pelanggan</label><textarea id='alamatPelanggan' class='form-control'>" + results.rows.item(i).Alamat + "</textarea></div>";
+                                    document.getElementById('tampilModal').innerHTML = isi;
+                                }
+                            }, null);
+                        });
+                        document.getElementById('judul').innerHTML = "Edit Pelanggan";
+                        document.getElementById('proses').innerHTML = "Simpan";
+                    break;
 
-                case'hapusPelanggan':
-                    isi += "<input type='hidden' id='act' value='hapusPelanggan'>";
-                    isi += "<input type='hidden' id='idPelanggan' value='"+id+"'>";
-                    isi += "Apakah Anda Yakin Akan Menghapus Data Ini !!";
-                    document.getElementById('tampilModal').innerHTML = isi;
-                    document.getElementById('judul').innerHTML = "Hapus Pelanggan";
-                    document.getElementById('proses').innerHTML = "Hapus";
-                break;
+                    case 'hapusPelanggan':
+                        isi += "<input type='hidden' id='act' value='hapusPelanggan'>";
+                        isi += "<input type='hidden' id='idPelanggan' value='" + id + "'>";
+                        isi += "Apakah Anda Yakin Akan Menghapus Data Ini !!";
+                        document.getElementById('tampilModal').innerHTML = isi;
+                        document.getElementById('judul').innerHTML = "Hapus Pelanggan";
+                        document.getElementById('proses').innerHTML = "Hapus";
+                        break;
 
-                case'addBarang':
-                    isi += "<input type='hidden' id='act' value='addBarang'>";
-                    isi += "<div class='form-group'><label>Nama Barang</label><input type='text' id='namaBarang' class='form-control'></div>";
-                    isi += "<div class='form-group'><label>Jumlah Barang</label><input type='number' id='jumlahBarang' class='form-control'></div>";
-                    isi += "<div class='form-group'><label>Satuan Barang</label><input type='text' id='satuanBarang' class='form-control'></div>";
-                    isi += "<div class='form-group'><label>Harga Barang</label><input type='number' id='hargaBarang' class='form-control'></div>";
-                    document.getElementById('tampilModal').innerHTML = isi;
-                    document.getElementById('judul').innerHTML = "Tambah Barang";
-                    document.getElementById('proses').innerHTML = "Simpan";
-                break;
+                    case 'addBarang':
+                        isi += "<input type='hidden' id='act' value='addBarang'>";
+                        isi += "<div class='form-group'><label>Nama Barang</label><input type='text' id='namaBarang' class='form-control'></div>";
+                        isi += "<div class='form-group'><label>Jumlah Barang</label><input type='number' id='jumlahBarang' class='form-control'></div>";
+                        isi += "<div class='form-group'><label>Satuan Barang</label><input type='text' id='satuanBarang' class='form-control'></div>";
+                        isi += "<div class='form-group'><label>Harga Barang</label><input type='number' id='hargaBarang' class='form-control'></div>";
+                        document.getElementById('tampilModal').innerHTML = isi;
+                        document.getElementById('judul').innerHTML = "Tambah Barang";
+                        document.getElementById('proses').innerHTML = "Simpan";
+                        break;
 
-                case 'editBarang':
-                    db.transaction(function (tx) {
-                        tx.executeSql('SELECT * FROM dbmitem WHERE ID = ' + id, [], function (tx, results) {
-                            var len = results.rows.length,
-                                i;
-                            for (i = 0; i < len; i++) {
-                                isi += "<input type='hidden' id='act' value='editBarang'>";
-                                isi += "<input type='hidden' id='idBarang' value='"+id+"'>";
-                                isi += "<div class='form-group'><label>Nama Barang</label><input type='text' value='"+results.rows.item(i).Nama+"' id='namaBarang' class='form-control'></div>";
-                                isi += "<div class='form-group'><label>Jumlah Barang</label><input type='number' value='"+results.rows.item(i).Jumlah+"' id='jumlahBarang' class='form-control'></div>";
-                                isi += "<div class='form-group'><label>Satuan Barang</label><input type='text' value='"+results.rows.item(i).Satuan+"' id='satuanBarang' class='form-control'></div>";
-                                isi += "<div class='form-group'><label>Harga Barang</label><input type='number' value='"+results.rows.item(i).Harga+"' id='hargaBarang' class='form-control'></div>";
-                                document.getElementById('tampilModal').innerHTML = isi; 
-                            }
-                        }, null);
-                    });
-                    document.getElementById('judul').innerHTML = "Edit Barang";
-                    document.getElementById('proses').innerHTML = "Simpan";
-                break;
+                    case 'editBarang':
+                        db.transaction(function (tx) {
+                            tx.executeSql('SELECT * FROM dbmitem WHERE ID = ' + id, [], function (tx, results) {
+                                let len = results.rows.length,
+                                    i;
+                                for (i = 0; i < len; i++) {
+                                    isi += "<input type='hidden' id='act' value='editBarang'>";
+                                    isi += "<input type='hidden' id='idBarang' value='" + id + "'>";
+                                    isi += "<div class='form-group'><label>Nama Barang</label><input type='text' value='" + results.rows.item(i).Nama + "' id='namaBarang' class='form-control'></div>";
+                                    isi += "<div class='form-group'><label>Jumlah Barang</label><input type='number' value='" + results.rows.item(i).Jumlah + "' id='jumlahBarang' class='form-control'></div>";
+                                    isi += "<div class='form-group'><label>Satuan Barang</label><input type='text' value='" + results.rows.item(i).Satuan + "' id='satuanBarang' class='form-control'></div>";
+                                    isi += "<div class='form-group'><label>Harga Barang</label><input type='number' value='" + results.rows.item(i).Harga + "' id='hargaBarang' class='form-control'></div>";
+                                    document.getElementById('tampilModal').innerHTML = isi;
+                                }
+                            }, null);
+                        });
+                        document.getElementById('judul').innerHTML = "Edit Barang";
+                        document.getElementById('proses').innerHTML = "Simpan";
+                        break;
 
-                case'hapusBarang':
-                    isi += "<input type='hidden' id='act' value='hapusBarang'>";
-                    isi += "<input type='hidden' id='idBarang' value='"+id+"'>";
-                    isi += "Apakah Anda Yakin Akan Menghapus Data Ini !!";
-                    document.getElementById('tampilModal').innerHTML = isi;
-                    document.getElementById('judul').innerHTML = "Hapus Barang";
-                    document.getElementById('proses').innerHTML = "Hapus";
-                break;
+                    case 'hapusBarang':
+                        isi += "<input type='hidden' id='act' value='hapusBarang'>";
+                        isi += "<input type='hidden' id='idBarang' value='" + id + "'>";
+                        isi += "Apakah Anda Yakin Akan Menghapus Data Ini !!";
+                        document.getElementById('tampilModal').innerHTML = isi;
+                        document.getElementById('judul').innerHTML = "Hapus Barang";
+                        document.getElementById('proses').innerHTML = "Hapus";
+                        break;
+                }
             }
-        }
 
-        Query("tampilPelanggan");
-    </script>
+            function transaksi() {
+                let sekarang = new Date();
+                document.getElementById('tanggal').value = sekarang;
+                let Pelanggan = document.getElementById('divPelanggan');
+                let selectPelanggan = document.createElement("select");
+                selectPelanggan.id = "pelanggan";
+                selectPelanggan.className = "form-control";
+                Pelanggan.appendChild(selectPelanggan);
+                db.transaction(function (tx) {
+                    tx.executeSql('SELECT * FROM dbmcard', [], function (tx, results) {
+                        let len = results.rows.length,
+                            i;
+                        for (i = 0; i < len; i++) {
+                            let option = document.createElement("option");
+                            option.value = results.rows.item(i).ID;
+                            option.text = results.rows.item(i).Nama;
+                            selectPelanggan.appendChild(option);
+                        }
+                    }, null);
+                });
+
+                let myParent = document.getElementById('barang1');
+                let selectBarang = document.createElement("select");
+                selectBarang.id = "barang";
+                selectBarang.setAttribute("name", "barang1");
+                selectBarang.className = "form-control form-control-sm barang";
+                myParent.appendChild(selectBarang);
+                db.transaction(function (tx) {
+                    tx.executeSql('SELECT * FROM dbmitem', [], function (tx, results) {
+                        let len = results.rows.length,
+                            i;
+                        for (i = 0; i < len; i++) {
+                            let option = document.createElement("option");
+                            option.value = results.rows.item(i).ID;
+                            option.text = results.rows.item(i).Nama;
+                            selectBarang.appendChild(option);
+                        }
+                    }, null);
+                });
+            }
+
+            function simpanTransaksi() {
+                let lastInsertId = null;
+                let DataBarang = document.getElementsByClassName('barang');
+                let DataQty = document.getElementsByClassName('qty');
+                let DataHarga = document.getElementsByClassName('harga');
+                db.transaction(function (tx) {
+                    tx.executeSql('INSERT INTO dbtitemtrans (CardID, Tanggal) VALUES ("' + document.getElementById('pelanggan') + '", "' + document.getElementById('tanggal') + '")', [], function (tx, sql_res) {
+                        lastInsertId = sql_res.insertId;
+                    });
+                });
+                for (let i = 0; i < DataBarang.length; i++) {
+                    db.transaction(function (tx) {
+                        tx.executeSql('INSERT INTO dbtitemtransdetail (DocID, ItemID, Jumlah, Harga) VALUES ("' + lastInsertId + '", "' + DataBarang[i].value + '", "' + DataQty[i].value + '", "' + DataHarga[i].value + '")');
+                    });
+                }
+                alert(lastInsertId);
+            }
+
+            function deleteRow(row) {
+                let i = row.parentNode.parentNode.rowIndex;
+                document.getElementById('tableTransaksi').deleteRow(i);
+            }
+
+            function insRow() {
+                console.log('hi');
+                let x = document.getElementById('tableTransaksi');
+                let new_row = x.rows[1].cloneNode(true);
+                let len = x.rows.length;
+                new_row.cells[0].innerHTML = len;
+
+                let inp1 = new_row.cells[1].getElementsByTagName('select')[0];
+                inp1.id += len;
+                inp1.setAttribute("name", "barang" + len);
+                let inp2 = new_row.cells[2].getElementsByTagName('input')[0];
+                inp2.id += len;
+                inp2.value = '';
+                inp2.setAttribute("name", "qty" + len);
+                let inp3 = new_row.cells[3].getElementsByTagName('input')[0];
+                inp3.id += len;
+                inp3.value = '';
+                inp3.setAttribute("name", "jumlah" + len);
+                x.appendChild(new_row);
+            }
+
+            Query("tampilPelanggan");
+        </script>
 </body>
 
 </html>
